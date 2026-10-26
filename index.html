@@ -1,0 +1,192 @@
+index
+!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Irregular Verbs Adventure - 2º Secundaria</title>
+<style>
+ :root{--verde:#1f7a4d;--claro:#e8f5ee;--naranja:#f28c28;--rojo:#d64545;--azul:#2b6cb0;--gris:#444}
+ *{box-sizing:border-box}
+ body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--claro);color:var(--gris)}
+ header{background:var(--verde);color:#fff;padding:14px;text-align:center}
+ header h1{margin:0;font-size:1.3rem}
+ header p{margin:4px 0 0;font-size:.85rem;opacity:.9}
+ main{max-width:640px;margin:0 auto;padding:14px}
+ .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+ button{font-size:1rem;border:0;border-radius:10px;padding:12px 16px;margin:4px 0;cursor:pointer;background:var(--azul);color:#fff;width:100%}
+ button.sec{background:var(--verde)}
+ button.out{background:#fff;color:var(--azul);border:2px solid var(--azul)}
+ button:disabled{opacity:.5}
+ input[type=text]{width:100%;font-size:1.1rem;padding:12px;border:2px solid #bbb;border-radius:10px;margin:8px 0}
+ .stats{display:flex;justify-content:space-between;font-weight:bold;margin-bottom:8px}
+ .verbo{font-size:2rem;text-align:center;color:var(--verde);font-weight:bold;margin:6px 0}
+ .frase{font-size:1.1rem;text-align:center;margin:10px 0}
+ .ok{color:var(--verde);font-weight:bold}
+ .mal{color:var(--rojo);font-weight:bold}
+ .barra{background:#ddd;border-radius:8px;height:14px;overflow:hidden}
+ .barra div{background:var(--naranja);height:100%;width:0;transition:width .3s}
+ table{width:100%;border-collapse:collapse;font-size:.95rem}
+ th,td{padding:6px;border-bottom:1px solid #eee;text-align:left}
+ th{background:var(--verde);color:#fff}
+ .opciones button{background:#fff;color:var(--gris);border:2px solid #ccc;text-align:left}
+ .hidden{display:none}
+ .nota{font-size:.8rem;color:#777;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+ <h1>🌎 Irregular Verbs Adventure</h1>
+ <p>Segundo grado de secundaria · Nueva Escuela Mexicana</p>
+</header>
+<main>
+
+<div id="menu" class="card">
+ <p><strong>¡Hola!</strong> Practica 40 verbos irregulares en pasado simple con situaciones de tu comunidad, tu familia y tu escuela.</p>
+ <div class="barra"><div id="progresoGlobal"></div></div>
+ <p id="textoProgreso" style="font-size:.85rem"></p>
+ <button onclick="mostrar('estudio')">📖 1. Estudiar los verbos</button>
+ <button class="sec" onclick="iniciar('opcion')">🎯 2. Nivel fácil: elige la opción</button>
+ <button class="sec" onclick="iniciar('escribir')">✍️ 3. Nivel medio: escribe el pasado</button>
+ <button class="sec" onclick="iniciar('historia')">🏘️ 4. Nivel reto: completa la historia</button>
+ <button class="out" onclick="reiniciar()">🔄 Borrar mi progreso</button>
+</div>
+
+<div id="estudio" class="card hidden">
+ <h3>Los 40 verbos</h3>
+ <input type="text" id="buscar" placeholder="Buscar verbo..." oninput="pintarTabla()">
+ <table><thead><tr><th>Base</th><th>Past</th><th>Español</th></tr></thead><tbody id="tabla"></tbody></table>
+ <button class="out" onclick="mostrar('menu')">⬅ Volver</button>
+</div>
+
+<div id="juego" class="card hidden">
+ <div class="stats"><span id="modo"></span><span>⭐ <span id="puntos">0</span></span><span id="contador"></span></div>
+ <div id="pregunta"></div>
+ <div id="respuesta"></div>
+ <div id="feedback" class="frase"></div>
+ <button id="siguiente" class="sec hidden" onclick="siguiente()">Siguiente ➡</button>
+ <button class="out" onclick="salir()">Salir al menú</button>
+</div>
+
+<div id="final" class="card hidden">
+ <h2 id="finalTitulo"></h2>
+ <p id="finalTexto"></p>
+ <button onclick="mostrar('menu')">Volver al menú</button>
+</div>
+
+<p class="nota">Proyecto de aula · Inglés · Aprendizaje contextualizado y autoevaluación (NEM)</p>
+</main>
+
+<script>
+const VERBOS = [
+["go","went","ir","Last Sunday my family ___ to the tianguis in Xalapa."],
+["eat","ate","comer","We ___ tamales at my grandmother's house."],
+["drink","drank","beber","After the game, I ___ agua de jamaica."],
+["see","saw","ver","Yesterday I ___ my cousin at the plaza."],
+["have","had","tener","My school ___ a cultural festival last week."],
+["do","did","hacer","We ___ our homework together at the library."],
+["make","made","hacer / preparar","My mom ___ coffee from Veracruz this morning."],
+["take","took","tomar / llevar","I ___ the bus to school yesterday."],
+["come","came","venir","My uncles ___ to the party from Coatepec."],
+["give","gave","dar","Our teacher ___ us a project about our community."],
+["get","got","obtener / recibir","I ___ a good grade in my English exam."],
+["buy","bought","comprar","My dad ___ fresh fruit at the market."],
+["bring","brought","traer","Ana ___ her guitar to the school event."],
+["think","thought","pensar","I ___ about my future career last night."],
+["say","said","decir","The principal ___ that classes start at 8:00."],
+["tell","told","contar / decir","My grandpa ___ us a story about the old town."],
+["know","knew","saber / conocer","I ___ all the answers in the quiz!"],
+["find","found","encontrar","We ___ a lost dog near the park."],
+["leave","left","salir / dejar","They ___ home very early for the trip."],
+["feel","felt","sentir","I ___ proud of my team after the match."],
+["keep","kept","guardar / mantener","She ___ her notebooks very organized."],
+["meet","met","conocer / encontrarse","I ___ a new friend in my English class."],
+["run","ran","correr","We ___ five kilometers in the school race."],
+["write","wrote","escribir","Luis ___ a poem about the rain in Xalapa."],
+["read","read","leer","I ___ a legend from my state yesterday."],
+["speak","spoke","hablar","The visitor ___ English with the students."],
+["sing","sang","cantar","We ___ a traditional son jarocho song."],
+["swim","swam","nadar","My brother ___ in the river during vacation."],
+["sit","sat","sentarse","The students ___ in a circle to share ideas."],
+["stand","stood","pararse","Everyone ___ up for the Mexican anthem."],
+["sleep","slept","dormir","I ___ nine hours after the trip."],
+["wake","woke","despertar","I ___ up at 6:00 to help my parents."],
+["wear","wore","usar / vestir","The dancers ___ colorful traditional dresses."],
+["lose","lost","perder","Our team ___ the volleyball game, but we had fun."],
+["win","won","ganar","My school ___ the science fair!"],
+["begin","began","comenzar","The Day of the Dead celebration ___ at night."],
+["draw","drew","dibujar","She ___ a mural about our neighborhood."],
+["fall","fell","caer","A mango ___ from the tree in my yard."],
+["send","sent","enviar","I ___ a message to my teacher."],
+["teach","taught","enseñar","My grandmother ___ me to make tortillas."]
+];
+
+let modoActual="", cola=[], indice=0, puntos=0, esperando=false;
+let dominados = JSON.parse(localStorage.getItem("verbosDominados")||"[]");
+
+function mezclar(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function el(id){return document.getElementById(id)}
+function mostrar(id){["menu","estudio","juego","final"].forEach(x=>el(x).classList.add("hidden"));el(id).classList.remove("hidden");if(id==="menu")actualizarProgreso();if(id==="estudio")pintarTabla()}
+function actualizarProgreso(){const p=Math.round(dominados.length/VERBOS.length*100);el("progresoGlobal").style.width=p+"%";el("textoProgreso").textContent="Verbos dominados: "+dominados.length+" de "+VERBOS.length}
+function pintarTabla(){const q=el("buscar").value.toLowerCase();el("tabla").innerHTML=VERBOS.filter(v=>v[0].includes(q)||v[2].toLowerCase().includes(q)).map(v=>`<tr><td>${v[0]}</td><td><strong>${v[1]}</strong></td><td>${v[2]}</td></tr>`).join("")}
+function reiniciar(){if(confirm("¿Seguro que quieres borrar tu progreso?")){dominados=[];localStorage.removeItem("verbosDominados");actualizarProgreso()}}
+function marcarDominado(base){if(!dominados.includes(base)){dominados.push(base);localStorage.setItem("verbosDominados",JSON.stringify(dominados))}}
+
+function iniciar(modo){
+ modoActual=modo;cola=mezclar(VERBOS).slice(0,10);indice=0;puntos=0;
+ el("modo").textContent={opcion:"Fácil",escribir:"Medio",historia:"Reto"}[modo];
+ mostrar("juego");cargar();
+}
+function salir(){mostrar("menu")}
+function cargar(){
+ esperando=false;el("feedback").innerHTML="";el("siguiente").classList.add("hidden");
+ el("puntos").textContent=puntos;el("contador").textContent=(indice+1)+"/"+cola.length;
+ const v=cola[indice];
+ if(modoActual==="opcion"){
+   el("pregunta").innerHTML=`<p class="frase">¿Cuál es el pasado de…</p><div class="verbo">${v[0]}</div><p class="frase">(${v[2]})</p>`;
+   const distract=mezclar(VERBOS.filter(x=>x[1]!==v[1])).slice(0,3).map(x=>x[1]);
+   const ops=mezclar([v[1],...distract]);
+   el("respuesta").innerHTML='<div class="opciones">'+ops.map(o=>`<button onclick="elegir('${o}',this)">${o}</button>`).join("")+'</div>';
+ } else if(modoActual==="escribir"){
+   el("pregunta").innerHTML=`<p class="frase">Escribe el pasado de:</p><div class="verbo">${v[0]}</div><p class="frase">(${v[2]})</p>`;
+   el("respuesta").innerHTML=`<input type="text" id="resp" autocomplete="off" autocapitalize="none" placeholder="past tense..."><button onclick="revisar()">Revisar ✔</button>`;
+   el("resp").addEventListener("keydown",e=>{if(e.key==="Enter")revisar()});el("resp").focus();
+ } else {
+   const frase=v[3].replace("___",'<span style="color:var(--naranja)">_____</span>');
+   el("pregunta").innerHTML=`<p class="frase">${frase}</p><p class="frase" style="font-size:.9rem">Verbo: <strong>${v[0]}</strong> (${v[2]})</p>`;
+   el("respuesta").innerHTML=`<input type="text" id="resp" autocomplete="off" autocapitalize="none" placeholder="Escribe el verbo en pasado..."><button onclick="revisar()">Revisar ✔</button>`;
+   el("resp").addEventListener("keydown",e=>{if(e.key==="Enter")revisar()});el("resp").focus();
+ }
+}
+function elegir(op,btn){
+ if(esperando)return;esperando=true;
+ const v=cola[indice];
+ document.querySelectorAll(".opciones button").forEach(b=>{b.disabled=true;if(b.textContent===v[1])b.style.borderColor="var(--verde)"});
+ resultado(op===v[1],v);
+}
+function revisar(){
+ if(esperando)return;esperando=true;
+ const v=cola[indice];const r=el("resp").value.trim().toLowerCase();
+ el("resp").disabled=true;
+ resultado(r===v[1],v);
+}
+function resultado(ok,v){
+ if(ok){puntos+=10;marcarDominado(v[0]);el("feedback").innerHTML=`<span class="ok">✅ Correct! ${v[0]} → ${v[1]}</span>`}
+ else{el("feedback").innerHTML=`<span class="mal">❌ Not quite.</span> ${v[0]} → <strong>${v[1]}</strong>`}
+ if(modoActual==="historia"||modoActual==="escribir"){el("feedback").innerHTML+=`<br><em>${v[3].replace("___","<strong>"+v[1]+"</strong>")}</em>`}
+ el("puntos").textContent=puntos;
+ el("siguiente").classList.remove("hidden");
+}
+function siguiente(){
+ indice++;
+ if(indice>=cola.length){
+   const max=cola.length*10;
+   el("finalTitulo").textContent=puntos>=max*0.8?"🏆 Excellent work!":puntos>=max*0.5?"👍 Good job!":"💪 Keep practicing!";
+   el("finalTexto").textContent="Obtuviste "+puntos+" de "+max+" puntos. Reflexiona: ¿qué verbos te costaron más? Repásalos en la sección de estudio y vuelve a intentarlo.";
+   mostrar("final");
+ } else cargar();
+}
+actualizarProgreso();
+</script>
+</body>
+</html>
